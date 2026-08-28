@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <meta name="description" content="استودیو دیجیتال پارمیس — طراحی سایت با وردپرس، طراحی قالب و افزونه، بیزینس پلن و اتوماسیون هوشمند با هوش مصنوعی" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M32 4 58 18v28L32 60 6 46V18Z' fill='%23120c22'/%3E%3Cpath d='M32 4 58 18v28L32 60 6 46V18Z' fill='none' stroke='%239d6bff' stroke-width='3'/%3E%3Ccircle cx='32' cy='26' r='6' fill='%239d6bff'/%3E%3Ccircle cx='20' cy='42' r='4' fill='%23e8b45a'/%3E%3Ccircle cx='44' cy='42' r='4' fill='%23ff6ad5'/%3E%3Cpath d='M32 32v4M28 30l-6 9M36 30l6 9' stroke='%239d6bff' stroke-width='2.5'/%3E%3C/svg%3E" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Lalezar&family=Vazirmatn:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <title>پارمیس | طراحی سایت وردپرس، بیزینس پلن و اتوماسیون هوشمند</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script>
+      /* سپر ضد صفحه سفید: اگر سایت بالا نیامد، به‌جای صفحه خالی پیام و راه‌حل نشان بده */
+      window.addEventListener("load", function () {
+        setTimeout(function () {
+          var root = document.getElementById("root");
+          if (root && !root.hasChildNodes()) {
+            root.innerHTML =
+              '<div dir="rtl" style="min-height:100vh;display:grid;place-items:center;background:#0a0714;font-family:Tahoma,Vazirmatn,sans-serif;padding:20px">' +
+              '<div style="max-width:430px;width:100%;background:#140e26;border:1px solid #2a1f4a;border-radius:22px;padding:34px;text-align:center;box-shadow:0 0 60px rgba(157,107,255,.15)">' +
+              '<div style="font-size:38px">🔌</div>' +
+              '<h1 style="color:#cbb4ff;font-size:21px;margin:14px 0 10px">سایت هنوز بالا نیامده!</h1>' +
+              '<p style="color:#a99fd0;font-size:13.5px;line-height:2.1;margin:0">احتمالاً کش مرورگر قدیمی است. اول «بارگذاری دوباره» را بزن؛ اگر درست نشد، صفحه را در یک <b style="color:#cbb4ff">تب جدید</b> یا حالت <b style="color:#cbb4ff">Incognito</b> باز کن.</p>' +
+              '<button onclick="location.reload(true)" style="margin-top:18px;width:100%;background:#9d6bff;color:#0a0714;border:none;border-radius:99px;padding:13px;font-size:14.5px;font-weight:bold;cursor:pointer">🔄 بارگذاری دوباره</button>' +
+              '<button onclick="window.open(location.href,\'_blank\')" style="margin-top:10px;width:100%;background:transparent;color:#9d6bff;border:1.5px solid #9d6bff;border-radius:99px;padding:12px;font-size:13.5px;font-weight:bold;cursor:pointer">باز کردن در تب جدید ↗</button>' +
+              '</div></div>';
+          }
+        }, 6000);
+      });
+    </script>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
