@@ -29,13 +29,29 @@ function ExportFallback() {
   );
 }
 
-/* صفحه دانلود جدا بارگذاری می‌شود تا سایت اصلی سبک بماند */
-const Export = lazy(() =>
-  import("./pages/Export").catch((err) => {
-    console.error("خطای بارگذاری صفحه دانلود:", err);
-    return { default: ExportFallback };
-  })
-);
+/* صفحه دانلود فقط در حالت توسعه بارگذاری می‌شود.
+   مسیر به‌صورت متغیر و با @vite-ignore آمده تا Rollup در بیلد نهایی اصلاً دنبال
+   این فایل نگردد و آن را به‌عنوان Asset هم کپی نکند — پس در گیت‌هاب نیازی به آپلودش نیست. */
+const EXPORT_MODULE = "./pages/" + "Export.tsx";
+const Export = import.meta.env.DEV
+  ? lazy(() =>
+      import(/* @vite-ignore */ EXPORT_MODULE).catch((err) => {
+        console.error("خطای بارگذاری صفحه دانلود:", err);
+        return { default: ExportFallback };
+      })
+    )
+  : undefined;
+
+/* صفحه «کپی فایل‌ها برای گیت‌هاب» — فقط در حالت توسعه */
+const COPY_MODULE = "./pages/" + "CopyFiles.tsx";
+const CopyFiles = import.meta.env.DEV
+  ? lazy(() =>
+      import(/* @vite-ignore */ COPY_MODULE).catch((err) => {
+        console.error("خطای بارگذاری صفحه کپی:", err);
+        return { default: ExportFallback };
+      })
+    )
+  : undefined;
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -64,7 +80,9 @@ function Shell() {
           <Route path="/collab" element={<Collaboration />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/admin" element={<Admin />} />
-          <Route path="/export" element={<ExportPage />} />
+          {/* صفحه دانلود فقط در حالت توسعه (npm run dev) فعال است و در سایت نهایی دیده نمی‌شود */}
+          {import.meta.env.DEV && <Route path="/export" element={<ExportPage />} />}
+          {import.meta.env.DEV && <Route path="/copy" element={<CopyPage />} />}
           <Route path="*" element={<Home />} />
         </Routes>
       </main>
@@ -108,6 +126,7 @@ class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { err
 }
 
 function ExportPage() {
+  if (!Export) return null;
   return (
     <ErrorBoundary>
       <Suspense
@@ -121,6 +140,23 @@ function ExportPage() {
         }
       >
         <Export />
+      </Suspense>
+    </ErrorBoundary>
+  );
+}
+
+function CopyPage() {
+  if (!CopyFiles) return null;
+  return (
+    <ErrorBoundary>
+      <Suspense
+        fallback={
+          <div className="grid min-h-screen place-items-center pt-[74px]">
+            <span className="h-10 w-10 animate-spin rounded-full border-[3px] border-violet/25 border-t-violet" />
+          </div>
+        }
+      >
+        <CopyFiles />
       </Suspense>
     </ErrorBoundary>
   );
