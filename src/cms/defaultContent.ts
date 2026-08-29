@@ -28,6 +28,7 @@ export interface Project {
   tech: string[];
   year: string;
   hue: 0 | 1 | 2 | 3;
+  image?: string;
 }
 
 export interface Testimonial {
