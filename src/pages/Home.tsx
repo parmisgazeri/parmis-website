@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { useCms, toFa } from "../cms/ContentContext";
 import HeroScene from "../components/three/HeroScene";
 import {
-  Counter, Marquee, ProjectCover, Reveal, ScrambleText, SectionHead,
+  Counter, Marquee, ProjectMedia, Reveal, ScrambleText, SectionHead,
   SERVICE_ICONS, IconArrow, IconArrowUpLeft, IconQuote, IconSpark, IconCheck,
 } from "../components/ui";
 
@@ -264,7 +264,7 @@ export default function Home() {
               <Link to="/portfolio" className="card-3d group block h-full overflow-hidden rounded-2xl border border-line bg-surface/70">
                 <div className="overflow-hidden">
                   <div className="transition-transform duration-700 group-hover:scale-[1.05]">
-                    <ProjectCover hue={p.hue} title={p.title} category={p.category} />
+                    <ProjectMedia project={p} />
                   </div>
                 </div>
                 <div className="p-6">
