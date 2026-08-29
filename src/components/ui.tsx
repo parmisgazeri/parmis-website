@@ -303,6 +303,23 @@ export function ProjectCover({ hue, title, category }: { hue: 0 | 1 | 2 | 3; tit
   );
 }
 
+/* ================= project cover (image-aware) ================= */
+export function ProjectMedia({ project }: { project: { hue: 0 | 1 | 2 | 3; title: string; category: string; image?: string } }) {
+  const img = project.image && project.image.trim();
+  if (img) {
+    return (
+      <div className="relative aspect-[16/10] w-full overflow-hidden bg-ink">
+        <img src={project.image} alt={project.title} loading="lazy" className="h-full w-full object-cover" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#0a0714]/70 via-transparent to-transparent" />
+        <span className="absolute right-4 top-4 rounded-full border border-white/10 bg-[#0a0714]/70 px-3 py-1 text-[11.5px] font-bold text-white backdrop-blur">
+          {project.category}
+        </span>
+      </div>
+    );
+  }
+  return <ProjectCover hue={project.hue} title={project.title} category={project.category} />;
+}
+
 /* ================= cursor glow ================= */
 export function CursorGlow() {
   const ref = useRef<HTMLDivElement>(null);
