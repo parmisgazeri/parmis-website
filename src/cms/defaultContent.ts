@@ -73,6 +73,8 @@ export interface SiteSettings {
   location: string;
   instagram: string;
   telegram: string;
+  cardNumber: string;
+  cardHolder: string;
 }
 
 export interface SiteContent {
@@ -96,7 +98,9 @@ export interface InboxMessage {
   body: string;
   date: string;
   read: boolean;
-  kind: "message" | "proposal";
+  kind: "message" | "proposal" | "payment";
+  amount?: string;
+  receipt?: string;
 }
 
 export const DEFAULT_CONTENT: SiteContent = {
@@ -115,6 +119,8 @@ export const DEFAULT_CONTENT: SiteContent = {
     location: "ایران — همکاری remote با سراسر دنیا",
     instagram: "",
     telegram: "",
+    cardNumber: "6037-9911-0000-0000",
+    cardHolder: "به نام پارمیس",
   },
 
   stats: [
@@ -193,6 +199,7 @@ export const DEFAULT_CONTENT: SiteContent = {
       tech: ["وردپرس", "ووکامرس", "درگاه پرداخت"],
       year: "۱۴۰۳",
       hue: 0,
+      image: "https://image.qwenlm.ai/generated-images/443c6637-2827-4706-908f-176b07822c40/_result.png",
     },
     {
       id: "p2",
@@ -203,6 +210,7 @@ export const DEFAULT_CONTENT: SiteContent = {
       tech: ["وردپرس", "قالب اختصاصی", "سئو"],
       year: "۱۴۰۳",
       hue: 1,
+      image: "https://image.qwenlm.ai/generated-images/bdfa4129-1cec-48b7-8478-1ff379c2117b/_result.png",
     },
     {
       id: "p3",
@@ -213,6 +221,7 @@ export const DEFAULT_CONTENT: SiteContent = {
       tech: ["PHP", "وردپرس", "API پیامک"],
       year: "۱۴۰۲",
       hue: 2,
+      image: "https://image.qwenlm.ai/generated-images/484029ec-a172-41a2-8b5b-a4933c7c4e93/_result.png",
     },
     {
       id: "p4",
@@ -223,6 +232,7 @@ export const DEFAULT_CONTENT: SiteContent = {
       tech: ["OpenAI", "n8n", "واتس‌اپ"],
       year: "۱۴۰۳",
       hue: 3,
+      image: "https://image.qwenlm.ai/generated-images/c9ad6ac5-8fc9-482f-a7a4-a7e512faeb92/_result.png",
     },
     {
       id: "p5",
@@ -233,6 +243,7 @@ export const DEFAULT_CONTENT: SiteContent = {
       tech: ["وردپرس", "PHP", "JS"],
       year: "۱۴۰۲",
       hue: 1,
+      image: "https://image.qwenlm.ai/generated-images/9a50ddde-6641-4cb3-ade2-a0316320fd26/_result.png",
     },
     {
       id: "p6",
@@ -243,6 +254,7 @@ export const DEFAULT_CONTENT: SiteContent = {
       tech: ["مدل کسب‌وکار", "تحلیل بازار", "مسیر رشد"],
       year: "۱۴۰۳",
       hue: 0,
+      image: "https://image.qwenlm.ai/generated-images/a080dff3-277e-4256-875c-e07ae39ee2f3/_result.png",
     },
   ],
 
