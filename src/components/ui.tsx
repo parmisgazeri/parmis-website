@@ -320,6 +320,30 @@ export function ProjectMedia({ project }: { project: { hue: 0 | 1 | 2 | 3; title
   return <ProjectCover hue={project.hue} title={project.title} category={project.category} />;
 }
 
+/* ================= image compression (for receipt uploads) ================= */
+export function compressImage(file: File, maxW = 900, quality = 0.72): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const scale = Math.min(1, maxW / img.width);
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return reject(new Error("no canvas"));
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL("image/jpeg", quality));
+      };
+      img.onerror = () => reject(new Error("bad image"));
+      img.src = String(reader.result);
+    };
+    reader.onerror = () => reject(new Error("read fail"));
+    reader.readAsDataURL(file);
+  });
+}
+
 /* ================= cursor glow ================= */
 export function CursorGlow() {
   const ref = useRef<HTMLDivElement>(null);
