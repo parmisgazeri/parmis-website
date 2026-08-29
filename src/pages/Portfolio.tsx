@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useCms, toFa } from "../cms/ContentContext";
-import { ProjectCover, Reveal, SectionHead, IconArrow, IconSpark, IconClock } from "../components/ui";
+import { ProjectMedia, Reveal, SectionHead, IconArrow, IconSpark, IconClock } from "../components/ui";
 
 export default function Portfolio() {
   const { content } = useCms();
@@ -55,7 +55,7 @@ export default function Portfolio() {
               <article className="card-3d group flex h-full flex-col overflow-hidden rounded-2xl border border-line bg-surface/70">
                 <div className="overflow-hidden">
                   <div className="transition-transform duration-700 group-hover:scale-[1.06]">
-                    <ProjectCover hue={p.hue} title={p.title} category={p.category} />
+                    <ProjectMedia project={p} />
                   </div>
                 </div>
                 <div className="flex flex-1 flex-col p-6.5">
