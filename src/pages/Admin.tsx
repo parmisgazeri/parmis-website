@@ -7,7 +7,7 @@ import {
 } from "../components/ui";
 
 /* ---------- schema definitions ---------- */
-type FieldDef = { key: string; label: string; type: "text" | "textarea" | "lines" | "select" | "check"; options?: string[] };
+type FieldDef = { key: string; label: string; type: "text" | "textarea" | "lines" | "select" | "check" | "image"; options?: string[] };
 type CollDef = { key: keyof SiteContent; label: string; singular: string; fields: FieldDef[]; preview: string };
 
 const COLLECTIONS: CollDef[] = [
@@ -28,6 +28,7 @@ const COLLECTIONS: CollDef[] = [
       { key: "category", label: "دسته‌بندی", type: "text" },
       { key: "desc", label: "توضیح کوتاه", type: "textarea" },
       { key: "result", label: "نتیجه پروژه (عدد/دستاورد)", type: "text" },
+      { key: "image", label: "تصویر پروژه", type: "image" },
       { key: "year", label: "سال", type: "text" },
       { key: "hue", label: "رنگ کاور", type: "select", options: ["0", "1", "2", "3"] },
       { key: "tech", label: "تکنولوژی‌ها (هر خط یکی)", type: "lines" },
@@ -340,7 +341,7 @@ export default function Admin() {
               </summary>
               <div className="grid gap-4 border-t border-line-soft p-5 sm:grid-cols-2">
                 {coll.fields.map((f) => (
-                  <div key={f.key} className={f.type === "textarea" || f.type === "lines" ? "sm:col-span-2" : ""}>
+                  <div key={f.key} className={f.type === "textarea" || f.type === "lines" || f.type === "image" ? "sm:col-span-2" : ""}>
                     <label className="mb-1.5 block text-[12px] font-bold text-lilac">{f.label}</label>
                     {f.type === "text" && (
                       <input
@@ -382,6 +383,45 @@ export default function Admin() {
                         />
                         <span className="text-[13px] font-semibold text-mist">فعال</span>
                       </label>
+                    )}
+                    {f.type === "image" && (
+                      <div>
+                        <div className="flex gap-2">
+                          <input
+                            className="field flex-1 text-[13px]"
+                            placeholder="https://example.com/project-image.jpg"
+                            value={String((item as Record<string, unknown>)[f.key] ?? "")}
+                            onChange={(e) => update(setField(coll, idx, f.key, e.target.value))}
+                          />
+                          <label className="inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-xl border border-violet/40 bg-violet/10 px-3.5 text-[12px] font-bold text-lilac transition-colors hover:bg-violet/25">
+                            <IconUpload className="h-3.5 w-3.5" />
+                            آپلود عکس
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (!file) return;
+                                const reader = new FileReader();
+                                reader.onload = () => update(setField(coll, idx, f.key, String(reader.result)));
+                                reader.readAsDataURL(file);
+                                e.target.value = "";
+                              }}
+                            />
+                          </label>
+                        </div>
+                        {String((item as Record<string, unknown>)[f.key] ?? "") !== "" && (
+                          <img
+                            src={String((item as Record<string, unknown>)[f.key])}
+                            alt="پیش‌نمایش تصویر"
+                            className="mt-2.5 h-28 w-full rounded-xl border border-line object-cover"
+                          />
+                        )}
+                        <p className="mt-1.5 text-[11px] leading-5 text-fog">
+                          لینک تصویر را وارد کن یا از کامپیوتر آپلود کن. اگر خالی باشد، کاور گرافیکی بنفش نشان داده می‌شود.
+                        </p>
+                      </div>
                     )}
                   </div>
                 ))}
