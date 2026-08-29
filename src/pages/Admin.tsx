@@ -6,6 +6,113 @@ import {
   IconArrow, IconArrowUpLeft, IconCheck, IconClose, IconDownload, IconEdit, IconEye, IconMail, IconPlus, IconTrash, IconUpload, LogoMark,
 } from "../components/ui";
 
+/* ---------- هدر تایپ‌ها برای ساخت فایل defaultContent.ts ---------- */
+const TYPES_HEADER = `export interface Service {
+  id: string;
+  title: string;
+  desc: string;
+  icon: "web" | "theme" | "plugin" | "plan" | "ai";
+  features: string[];
+  span: "wide" | "narrow" | "full";
+}
+
+export interface Course {
+  id: string;
+  title: string;
+  desc: string;
+  level: "مقدماتی" | "متوسط" | "پیشرفته";
+  duration: string;
+  sessions: string;
+  price: string;
+  syllabus: string[];
+  featured?: boolean;
+}
+
+export interface Project {
+  id: string;
+  title: string;
+  category: string;
+  desc: string;
+  result: string;
+  tech: string[];
+  year: string;
+  hue: 0 | 1 | 2 | 3;
+  image?: string;
+}
+
+export interface Testimonial {
+  id: string;
+  name: string;
+  role: string;
+  quote: string;
+  project: string;
+}
+
+export interface CollabType {
+  id: string;
+  title: string;
+  desc: string;
+  icon: "rocket" | "compass" | "handshake" | "system";
+}
+
+export interface Step {
+  id: string;
+  title: string;
+  desc: string;
+}
+
+export interface Stat {
+  id: string;
+  value: number;
+  suffix: string;
+  label: string;
+}
+
+export interface SiteSettings {
+  brandName: string;
+  studioName: string;
+  tagline: string;
+  heroBadge: string;
+  heroTitle: string;
+  heroHighlight: string;
+  heroDesc: string;
+  phone: string;
+  email: string;
+  workHours: string;
+  location: string;
+  instagram: string;
+  telegram: string;
+  cardNumber: string;
+  cardHolder: string;
+}
+
+export interface SiteContent {
+  settings: SiteSettings;
+  stats: Stat[];
+  services: Service[];
+  steps: Step[];
+  techStack: string[];
+  projects: Project[];
+  courses: Course[];
+  testimonials: Testimonial[];
+  collabTypes: CollabType[];
+  collabSteps: Step[];
+}
+
+export interface InboxMessage {
+  id: string;
+  name: string;
+  contact: string;
+  subject: string;
+  body: string;
+  date: string;
+  read: boolean;
+  kind: "message" | "proposal" | "payment";
+  amount?: string;
+  receipt?: string;
+}
+`;
+
 /* ---------- schema definitions ---------- */
 type FieldDef = { key: string; label: string; type: "text" | "textarea" | "lines" | "select" | "check" | "image"; options?: string[] };
 type CollDef = { key: keyof SiteContent; label: string; singular: string; fields: FieldDef[]; preview: string };
@@ -87,6 +194,8 @@ const SETTINGS_FIELDS: FieldDef[] = [
   { key: "location", label: "موقعیت", type: "text" },
   { key: "instagram", label: "لینک اینستاگرام (اختیاری)", type: "text" },
   { key: "telegram", label: "لینک تلگرام (اختیاری)", type: "text" },
+  { key: "cardNumber", label: "شماره کارت (برای پرداخت دوره‌ها)", type: "text" },
+  { key: "cardHolder", label: "شماره کارت به نامِ...", type: "text" },
 ];
 
 type Tab = "dashboard" | "inbox" | (typeof COLLECTIONS)[number]["key"] | "settings" | "tech";
@@ -263,6 +372,8 @@ export default function Admin() {
   const { content, update, inbox, updateInbox, removeInbox, clearInbox, exportJson, importJson, resetAll, lastSaved } = useCms();
   const [tab, setTab] = useState<Tab>("dashboard");
   const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
+  const [inboxFilter, setInboxFilter] = useState<"all" | "message" | "proposal" | "payment">("all");
+  const [viewReceipt, setViewReceipt] = useState<{ name: string; src: string } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const [authed, setAuthed] = useState(() => localStorage.getItem(AUTH_KEY) === "1");
 
@@ -301,6 +412,36 @@ export default function Admin() {
     a.click();
     URL.revokeObjectURL(a.href);
     notify("فایل پشتیبان دانلود شد ✓");
+  };
+
+  /* ---------- خروجی «کد محتوا» برای انتشار روی گیت‌هاب ----------
+     فایل defaultContent.ts کامل (تایپ‌ها + محتوای فعلی) را می‌سازد تا
+     با جایگزینی آن در ریپازیتوری، تغییرات CMS روی سایت اصلی اعمال شود. */
+  const buildContentTs = () =>
+    TYPES_HEADER + "\nexport const defaultContent: SiteContent = " + JSON.stringify(content, null, 2) + ";\n";
+
+  const hasBase64Image = () =>
+    content.projects.some((p) => typeof p.image === "string" && p.image.startsWith("data:"));
+
+  const onExportCode = () => {
+    if (hasBase64Image() && !window.confirm("بعضی تصاویر به‌صورت «آپلود از کامپیوتر» (base64) ذخیره شده‌اند و فایل خروجی را خیلی حجیم می‌کنند. بهتر است لینک تصویر (هاست) بگذارید. باز هم ادامه می‌دهید؟")) return;
+    const blob = new Blob([buildContentTs()], { type: "text/plain;charset=utf-8" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "defaultContent.ts";
+    a.click();
+    URL.revokeObjectURL(a.href);
+    notify("فایل defaultContent.ts دانلود شد ✓");
+  };
+
+  const onCopyCode = async () => {
+    if (hasBase64Image() && !window.confirm("بعضی تصاویر به‌صورت «آپلود از کامپیوتر» (base64) ذخیره شده‌اند و خروجی را خیلی حجیم می‌کنند. بهتر است لینک تصویر (هاست) بگذارید. باز هم ادامه می‌دهید؟")) return;
+    try {
+      await navigator.clipboard.writeText(buildContentTs());
+      notify("کد محتوا کپی شد ✓ — حالا در گیت‌هاب جایگزین کنید");
+    } catch {
+      notify("کپی ناموفق بود — از دکمه دانلود استفاده کنید");
+    }
   };
 
   const setField = (coll2: CollDef, idx2: number, key2: string, value: unknown) => (d: SiteContent): SiteContent => {
@@ -418,8 +559,13 @@ export default function Admin() {
                             className="mt-2.5 h-28 w-full rounded-xl border border-line object-cover"
                           />
                         )}
+                        {String((item as Record<string, unknown>)[f.key] ?? "").startsWith("data:") && (
+                          <p className="mt-1.5 rounded-lg border border-gold/40 bg-gold/10 px-3 py-2 text-[11px] font-bold leading-5.5 text-gold">
+                            ⚠️ این تصویر فقط در مرورگر خودت ذخیره شده و همراه سایت منتشر نمی‌شود. برای انتشار، تصویر را در یک هاست (مثل imgbb.com) آپلود کن و لینکش را اینجا بگذار.
+                          </p>
+                        )}
                         <p className="mt-1.5 text-[11px] leading-5 text-fog">
-                          لینک تصویر را وارد کن یا از کامپیوتر آپلود کن. اگر خالی باشد، کاور گرافیکی بنفش نشان داده می‌شود.
+                          بهترین روش برای انتشار: آپلود تصویر در <a href="https://imgbb.com" target="_blank" rel="noreferrer" className="font-bold text-lilac underline underline-offset-2">imgbb.com</a> (رایگان) و گذاشتن لینک مستقیم آن در این کادر — این‌طوری همراه کد، روی سایت اصلی هم نمایش داده می‌شود.
                         </p>
                       </div>
                     )}
@@ -467,6 +613,12 @@ export default function Admin() {
             </Link>
             <button onClick={onExport} className="inline-flex items-center gap-2 rounded-full border border-line px-5 py-2.5 text-[13px] font-bold text-lilac transition-all hover:border-violet">
               <IconDownload className="h-4 w-4" /> پشتیبان‌گیری
+            </button>
+            <button onClick={onCopyCode} className="btn-shine inline-flex items-center gap-2 rounded-full bg-gold px-5 py-2.5 text-[13px] font-extrabold text-ink transition-all hover:brightness-110 hover:shadow-[0_0_28px_rgba(232,180,90,0.45)]">
+              <IconEdit className="h-4 w-4" /> کپی کد محتوا (برای گیت‌هاب)
+            </button>
+            <button onClick={onExportCode} className="inline-flex items-center gap-2 rounded-full border border-gold/50 bg-gold/10 px-5 py-2.5 text-[13px] font-bold text-gold transition-all hover:bg-gold/20">
+              <IconDownload className="h-4 w-4" /> دانلود defaultContent.ts
             </button>
             <button onClick={() => fileRef.current?.click()} className="inline-flex items-center gap-2 rounded-full border border-line px-5 py-2.5 text-[13px] font-bold text-lilac transition-all hover:border-violet">
               <IconUpload className="h-4 w-4" /> وارد کردن
@@ -520,6 +672,7 @@ export default function Admin() {
                   {[
                     { label: "پیام‌های نخوانده", value: inbox.filter((m) => !m.read && m.kind === "message").length, gold: false },
                     { label: "پیشنهادهای همکاری", value: inbox.filter((m) => m.kind === "proposal").length, gold: true },
+                    { label: "رسیدهای پرداخت دوره", value: inbox.filter((m) => m.kind === "payment").length, gold: true },
                     { label: "خدمات فعال", value: content.services.length, gold: false },
                     { label: "نمونه‌کارها", value: content.projects.length, gold: false },
                     { label: "دوره‌های فعال", value: content.courses.length, gold: false },
@@ -538,7 +691,13 @@ export default function Admin() {
                     <li>۲. روی «ویرایش» هر آیتم کلیک کنید تا فرم آن باز شود — تغییرات همان لحظه ذخیره می‌شود.</li>
                     <li>۳. پیام‌های فرم تماس و پیشنهادهای همکاری در «صندوق پیام‌ها» جمع می‌شوند.</li>
                     <li>۴. با «پشتیبان‌گیری» یک فایل JSON بگیرید و هر جا خواستید با «وارد کردن» برگردانید.</li>
+                    <li>۵. برای اعمال تغییرات روی <b className="text-gold">سایت اصلی (Vercel)</b>: دکمه «دانلود defaultContent.ts» را بزنید و فایل را در گیت‌هاب جایگزین src/cms/defaultContent.ts کنید.</li>
                   </ul>
+                  <div className="mt-5 rounded-xl border border-gold/30 bg-gold/8 p-4">
+                    <p className="text-[12.5px] leading-6.5 text-mist">
+                      <b className="text-gold">💡 درباره تصاویر:</b> تغییرات این پنل در مرورگر خودت ذخیره می‌شود. برای اینکه تصاویر و محتوا روی سایت اصلیِ منتشرشده هم باشند، تصاویر را در یک هاست رایگان (مثل imgbb.com) آپلود کن، لینکشان را اینجا بگذار و بعد خروجی «defaultContent.ts» بگیر و در گیت‌هاب جایگزین کن.
+                    </p>
+                  </div>
                 </div>
               </div>
             )}
@@ -548,7 +707,7 @@ export default function Admin() {
                 <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
                   <div>
                     <h2 className="font-display text-2xl text-white">صندوق پیام‌ها</h2>
-                    <p className="mt-1 text-[12.5px] text-fog">پیام‌های فرم تماس و پیشنهادهای همکاری سایت — {new Intl.NumberFormat("fa-IR").format(inbox.length)} مورد</p>
+                    <p className="mt-1 text-[12.5px] text-fog">پیام‌ها، پیشنهادهای همکاری و رسیدهای پرداخت دوره‌ها — {new Intl.NumberFormat("fa-IR").format(inbox.length)} مورد</p>
                   </div>
                   {inbox.length > 0 && (
                     <button onClick={() => { if (window.confirm("همه پیام‌ها حذف شوند؟")) { clearInbox(); notify("صندوق خالی شد"); } }} className="inline-flex items-center gap-2 rounded-full border border-magenta/40 px-5 py-2.5 text-[13px] font-bold text-magenta transition-all hover:bg-magenta/15">
@@ -556,21 +715,52 @@ export default function Admin() {
                     </button>
                   )}
                 </div>
+
+                {/* filter chips */}
+                <div className="mb-6 flex flex-wrap gap-2.5">
+                  {([
+                    { k: "all" as const, label: "همه", n: inbox.length },
+                    { k: "message" as const, label: "پیام‌ها", n: inbox.filter((m) => m.kind === "message").length },
+                    { k: "proposal" as const, label: "همکاری", n: inbox.filter((m) => m.kind === "proposal").length },
+                    { k: "payment" as const, label: "💳 رسید پرداخت", n: inbox.filter((m) => m.kind === "payment").length },
+                  ]).map((f) => (
+                    <button
+                      key={f.k}
+                      onClick={() => setInboxFilter(f.k)}
+                      className={`inline-flex items-center gap-2 rounded-full border px-4.5 py-2 text-[12.5px] font-bold transition-all duration-300 ${
+                        inboxFilter === f.k
+                          ? f.k === "payment" ? "border-gold bg-gold text-ink" : "border-violet bg-violet text-ink"
+                          : "border-line bg-surface/60 text-mist hover:border-violet/60"
+                      }`}
+                    >
+                      {f.label}
+                      <span className={`rounded-full px-2 py-0.5 text-[10.5px] font-extrabold ${inboxFilter === f.k ? "bg-ink/20" : "bg-line/60 text-fog"}`}>
+                        {new Intl.NumberFormat("fa-IR").format(f.n)}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+
                 {inbox.length === 0 && (
                   <div className="rounded-2xl border border-dashed border-line py-20 text-center">
                     <IconMail className="mx-auto h-10 w-10 text-fog" />
                     <p className="mt-4 text-[14px] font-bold text-mist">هنوز پیامی ندارید</p>
-                    <p className="mt-1.5 text-[12.5px] text-fog">وقتی کسی از فرم تماس یا پیشنهاد همکاری پیام بفرستد، اینجا نمایش داده می‌شود.</p>
+                    <p className="mt-1.5 text-[12.5px] text-fog">وقتی کسی از فرم تماس پیام بفرستد یا برای دوره‌ها رسید پرداخت آپلود کند، اینجا نمایش داده می‌شود.</p>
                   </div>
                 )}
                 <div className="space-y-4">
-                  {inbox.map((m) => (
-                    <div key={m.id} className={`rounded-2xl border p-6 transition-colors ${m.read ? "border-line-soft bg-surface/40" : "border-violet/40 bg-surface/80"}`}>
+                  {inbox.filter((m) => inboxFilter === "all" || m.kind === inboxFilter).map((m) => (
+                    <div key={m.id} className={`rounded-2xl border p-6 transition-colors ${m.read ? "border-line-soft bg-surface/40" : m.kind === "payment" ? "border-gold/50 bg-surface/80" : "border-violet/40 bg-surface/80"}`}>
                       <div className="flex flex-wrap items-center justify-between gap-3">
-                        <div className="flex items-center gap-3">
-                          <span className={`rounded-full px-3 py-1 text-[11.5px] font-extrabold ${m.kind === "proposal" ? "bg-gold/15 text-gold" : "bg-violet/15 text-lilac"}`}>
-                            {m.kind === "proposal" ? "پیشنهاد همکاری" : "پیام"}
+                        <div className="flex flex-wrap items-center gap-3">
+                          <span className={`rounded-full px-3 py-1 text-[11.5px] font-extrabold ${m.kind === "proposal" ? "bg-gold/15 text-gold" : m.kind === "payment" ? "bg-[#27d17c]/15 text-[#27d17c]" : "bg-violet/15 text-lilac"}`}>
+                            {m.kind === "proposal" ? "پیشنهاد همکاری" : m.kind === "payment" ? "💳 رسید پرداخت" : "پیام"}
                           </span>
+                          {m.kind === "payment" && m.amount && (
+                            <span className="rounded-full border border-gold/40 bg-gold/10 px-3 py-1 text-[11.5px] font-extrabold text-gold">
+                              مبلغ: {m.amount}
+                            </span>
+                          )}
                           <span className="text-[14.5px] font-extrabold text-white">{m.name}</span>
                           <span className="ltr text-[12.5px] text-fog">{m.contact}</span>
                         </div>
@@ -578,7 +768,23 @@ export default function Admin() {
                       </div>
                       <div className="mt-3 text-[13.5px] font-bold text-lilac">{m.subject}</div>
                       <p className="mt-2 whitespace-pre-wrap text-[13.5px] leading-7 text-mist">{m.body}</p>
-                      <div className="mt-4 flex gap-3">
+
+                      {/* receipt */}
+                      {m.kind === "payment" && m.receipt && (
+                        <button
+                          onClick={() => setViewReceipt({ name: m.name, src: m.receipt as string })}
+                          className="group mt-4 flex items-center gap-4 rounded-2xl border border-gold/30 bg-ink/50 p-3.5 text-right transition-all hover:border-gold/70 hover:bg-ink/80"
+                        >
+                          <img src={m.receipt} alt={`رسید پرداخت ${m.name}`} className="h-16 w-16 rounded-xl border border-line object-cover transition-transform duration-300 group-hover:scale-105" />
+                          <span>
+                            <span className="block text-[13px] font-extrabold text-gold">تصویر رسید پرداخت</span>
+                            <span className="mt-0.5 block text-[11.5px] text-fog">برای مشاهده در اندازه بزرگ کلیک کنید</span>
+                          </span>
+                          <span className="mr-auto text-[18px] text-gold transition-transform duration-300 group-hover:-translate-x-1">←</span>
+                        </button>
+                      )}
+
+                      <div className="mt-4 flex flex-wrap gap-3">
                         {!m.read && (
                           <button onClick={() => updateInbox(m.id, { read: true })} className="inline-flex items-center gap-1.5 rounded-full border border-line px-4 py-2 text-[12px] font-bold text-lilac transition-all hover:border-violet">
                             <IconCheck className="h-3.5 w-3.5" /> خوانده شد
@@ -655,6 +861,31 @@ export default function Admin() {
           <IconArrowUpLeft className="h-4 w-4" /> بازگشت به سایت
         </Link>
       </div>
+
+      {/* receipt viewer */}
+      {viewReceipt && (
+        <div className="fixed inset-0 z-[95] grid place-items-center bg-ink/90 p-5 backdrop-blur-sm" onClick={() => setViewReceipt(null)}>
+          <div className="w-full max-w-2xl rounded-3xl border border-gold/40 bg-surface p-5 shadow-[0_30px_90px_-20px_rgba(232,180,90,0.35)]" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between gap-4 pb-4">
+              <div>
+                <h3 className="font-display text-[19px] text-gold">رسید پرداخت</h3>
+                <p className="mt-0.5 text-[12.5px] text-fog">ارسالی از: <b className="text-white">{viewReceipt.name}</b></p>
+              </div>
+              <button onClick={() => setViewReceipt(null)} className="grid h-10 w-10 place-items-center rounded-full border border-line text-fog transition-colors hover:border-magenta hover:text-magenta" aria-label="بستن">
+                <IconClose className="h-4.5 w-4.5" />
+              </button>
+            </div>
+            <img src={viewReceipt.src} alt="رسید پرداخت" className="max-h-[70vh] w-full rounded-2xl border border-line object-contain" />
+            <a
+              href={viewReceipt.src}
+              download={`receipt-${viewReceipt.name}.jpg`}
+              className="mt-4 inline-flex items-center gap-2 rounded-full bg-gold px-6 py-2.5 text-[13px] font-extrabold text-ink transition-all hover:brightness-110"
+            >
+              <IconDownload className="h-4 w-4" strokeWidth={2.2} /> دانلود رسید
+            </a>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
