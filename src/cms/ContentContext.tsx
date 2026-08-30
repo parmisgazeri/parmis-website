@@ -4,6 +4,42 @@ import { DEFAULT_CONTENT, InboxMessage, SiteContent } from "./defaultContent";
 const CONTENT_KEY = "parmis_cms_content_v2";
 const INBOX_KEY = "parmis_cms_inbox_v1";
 
+/* ---------- ذخیره‌سازی چندلایه و ضدخطا ----------
+   برخی محیط‌ها (مثل iframe پیش‌نمایش) دسترسی به localStorage را مسدود می‌کنند؛
+   در آن حالت به sessionStorage و سپس حافظه موقت داخل صفحه رجوع می‌شود. */
+export type StorageMode = "local" | "session" | "memory";
+const memStore = new Map<string, string>();
+let detectedMode: StorageMode = "memory";
+
+function storageGet(key: string): string | null {
+  try {
+    const v = localStorage.getItem(key);
+    if (v !== null) { detectedMode = "local"; return v; }
+  } catch { /* مسدود */ }
+  try {
+    const v = sessionStorage.getItem(key);
+    if (v !== null) { if (detectedMode !== "local") detectedMode = "session"; return v; }
+  } catch { /* مسدود */ }
+  const m = memStore.get(key);
+  if (m !== undefined && detectedMode === "memory") detectedMode = "memory";
+  return m ?? null;
+}
+
+function storageSet(key: string, value: string): void {
+  try { localStorage.setItem(key, value); detectedMode = "local"; return; } catch { /* مسدود */ }
+  try { sessionStorage.setItem(key, value); detectedMode = "session"; return; } catch { /* مسدود */ }
+  memStore.set(key, value);
+  detectedMode = "memory";
+}
+
+function storageRemove(key: string): void {
+  try { localStorage.removeItem(key); } catch { /* مسدود */ }
+  try { sessionStorage.removeItem(key); } catch { /* مسدود */ }
+  memStore.delete(key);
+}
+
+export const getStorageMode = (): StorageMode => detectedMode;
+
 function deepMerge<T>(base: T, patch: Partial<T> | null | undefined): T {
   if (!patch) return base;
   if (Array.isArray(base)) {
@@ -27,7 +63,7 @@ function deepMerge<T>(base: T, patch: Partial<T> | null | undefined): T {
 
 function loadContent(): SiteContent {
   try {
-    const raw = localStorage.getItem(CONTENT_KEY);
+    const raw = storageGet(CONTENT_KEY);
     if (raw) return deepMerge(DEFAULT_CONTENT, JSON.parse(raw));
   } catch {
     /* ignore */
@@ -37,7 +73,7 @@ function loadContent(): SiteContent {
 
 function loadInbox(): InboxMessage[] {
   try {
-    const raw = localStorage.getItem(INBOX_KEY);
+    const raw = storageGet(INBOX_KEY);
     if (raw) return JSON.parse(raw);
   } catch {
     /* ignore */
@@ -51,6 +87,7 @@ interface CmsContextValue {
   content: SiteContent;
   inbox: InboxMessage[];
   lastSaved: number;
+  storageMode: StorageMode;
   update: (mutator: (draft: SiteContent) => SiteContent) => void;
   resetAll: () => void;
   exportJson: () => string;
@@ -67,25 +104,39 @@ export function CmsProvider({ children }: { children: React.ReactNode }) {
   const [content, setContent] = useState<SiteContent>(loadContent);
   const [inbox, setInbox] = useState<InboxMessage[]>(loadInbox);
   const [lastSaved, setLastSaved] = useState(0);
+  const [storageMode, setStorageMode] = useState<StorageMode>(() => getStorageMode());
 
   useEffect(() => {
     const t = setTimeout(() => {
-      localStorage.setItem(CONTENT_KEY, JSON.stringify(content));
+      storageSet(CONTENT_KEY, JSON.stringify(content));
       setLastSaved(Date.now());
-    }, 250);
+      setStorageMode(getStorageMode());
+    }, 150);
     return () => clearTimeout(t);
   }, [content]);
 
   useEffect(() => {
-    localStorage.setItem(INBOX_KEY, JSON.stringify(inbox));
+    storageSet(INBOX_KEY, JSON.stringify(inbox));
+    setStorageMode(getStorageMode());
   }, [inbox]);
+
+  /* ذخیره دوره‌ای بیمه‌کننده: حتی اگر افکت‌ها به هر دلیل از قلم بیفتند،
+     هر ۴ ثانیه آخرین وضعیت در پایدارترین حافظه ممکن ثبت می‌شود */
+  useEffect(() => {
+    const iv = setInterval(() => {
+      storageSet(CONTENT_KEY, JSON.stringify(content));
+      storageSet(INBOX_KEY, JSON.stringify(inbox));
+      setStorageMode(getStorageMode());
+    }, 4000);
+    return () => clearInterval(iv);
+  }, [content, inbox]);
 
   const update = useCallback((mutator: (draft: SiteContent) => SiteContent) => {
     setContent((prev) => mutator(structuredClone(prev)));
   }, []);
 
   const resetAll = useCallback(() => {
-    localStorage.removeItem(CONTENT_KEY);
+    storageRemove(CONTENT_KEY);
     setContent(structuredClone(DEFAULT_CONTENT));
   }, []);
 
@@ -123,8 +174,8 @@ export function CmsProvider({ children }: { children: React.ReactNode }) {
   const clearInbox = useCallback(() => setInbox([]), []);
 
   const value = useMemo(
-    () => ({ content, inbox, lastSaved, update, resetAll, exportJson, importJson, addInbox, updateInbox, removeInbox, clearInbox }),
-    [content, inbox, lastSaved, update, resetAll, exportJson, importJson, addInbox, updateInbox, removeInbox, clearInbox]
+    () => ({ content, inbox, lastSaved, storageMode, update, resetAll, exportJson, importJson, addInbox, updateInbox, removeInbox, clearInbox }),
+    [content, inbox, lastSaved, storageMode, update, resetAll, exportJson, importJson, addInbox, updateInbox, removeInbox, clearInbox]
   );
 
   return <CmsContext.Provider value={value}>{children}</CmsContext.Provider>;
