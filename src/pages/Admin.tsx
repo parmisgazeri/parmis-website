@@ -369,7 +369,7 @@ function LoginGate({ onSuccess }: { onSuccess: () => void }) {
 }
 
 export default function Admin() {
-  const { content, update, inbox, updateInbox, removeInbox, clearInbox, exportJson, importJson, resetAll, lastSaved } = useCms();
+  const { content, update, inbox, updateInbox, removeInbox, clearInbox, exportJson, importJson, resetAll, lastSaved, storageMode } = useCms();
   const [tab, setTab] = useState<Tab>("dashboard");
   const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
   const [inboxFilter, setInboxFilter] = useState<"all" | "message" | "proposal" | "payment">("all");
@@ -638,6 +638,28 @@ export default function Admin() {
             </button>
           </div>
         </div>
+
+        {/* هشدار وضعیت ذخیره‌سازی */}
+        {storageMode === "memory" && (
+          <div className="mt-5 flex items-start gap-4 rounded-2xl border border-magenta/50 bg-magenta/10 p-5">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-magenta/20 text-[19px]">⚠️</span>
+            <div>
+              <p className="text-[14px] font-extrabold text-magenta">ذخیره‌سازی مرورگر در این محیط مسدود است!</p>
+              <p className="mt-1.5 text-[12.5px] leading-6.5 text-mist">
+                تغییرات فقط تا زمانی که این صفحه باز است می‌مانند و با رفرش از بین می‌روند.
+                <b className="text-white"> راه‌حل:</b> بعد از هر تغییر، دکمه طلایی «کپی کد محتوا (برای گیت‌هاب)» را بزنید و فایل <span className="ltr font-mono text-lilac">defaultContent.ts</span> را در گیت‌هاب جایگزین کنید تا تغییرات دائمی شوند.
+              </p>
+            </div>
+          </div>
+        )}
+        {storageMode === "session" && (
+          <div className="mt-5 flex items-start gap-4 rounded-2xl border border-gold/40 bg-gold/8 p-4">
+            <span className="text-[16px]">💡</span>
+            <p className="text-[12.5px] leading-6 text-mist">
+              تغییرات در این تب مرورگر ذخیره می‌شوند (حالت موقت). برای دائمی شدن، خروجی «کد محتوا» بگیرید و در گیت‌هاب جایگزین کنید.
+            </p>
+          </div>
+        )}
 
         <div className="mt-8 grid gap-8 lg:grid-cols-[250px_1fr]">
           {/* sidebar */}
